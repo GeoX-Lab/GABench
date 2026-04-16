@@ -1,0 +1,30 @@
+[project]
+name = "geobench"
+version = "0.1.0"
+description = "GeoBench Project"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastmcp",
+    "openai",
+    "aiofiles",
+
+    "numpy==2.3.4",
+    "pyyaml==6.0.3",
+    "pyproj==3.7.2",
+    "shapely==2.1.2",
+    "pykrige==1.7.3",
+    "geopandas==1.1.1",
+    "matplotlib==3.9.2",
+    "rasterio==1.4.3",
+    "fiona==1.10.1",
+    "netCDF4==1.7.3",
+    "mapclassify==2.10.0",
+    "openpyxl==3.1.5",
+    "osmnx==2.0.7",
+    "libpysal==4.13.0",
+    "esda==2.8.0",
+    "imblearn==0.0",
+    "rasterstats==0.20.0",
+    "hdbscan==0.8.40",
+]

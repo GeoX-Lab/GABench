@@ -1,0 +1,10 @@
+.env
+
+output/
+output_results/
+logs/
+results/
+
+*.pyc
+__pycache__/
+toolbox/__pycache__/

@@ -1,0 +1,56 @@
+output_dir: ./output
+log_path: logs/llm_usage.jsonl
+max_steps: 30
+max_tokens: 8192
+
+llm:
+  gpt-4o:
+    model: gpt-4o
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+  gpt-4o-mini:
+    model: gpt-4o-mini
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+  deepseek-v3:
+    model: deepseek-v3
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+  claude-sonnet-4-6:
+    model: claude-sonnet-4-6
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+  gemini-2.5-flash:
+    model: gemini-2.5-flash
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+  llama3.1-8b:
+    model: Llama3.1-8B-Instruct
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+  
+  qwen2.5-7b:
+    model: Qwen2.5-7B-Instruct
+    base_url: ${BASE_URL}
+    api_key: ${API_KEY}
+
+mcp_server:
+  mode: stdio # http or stdio
+  timeout: 360 # default timeout in seconds
+  stdio:
+    command: python
+    args: core/mcp_server.py
+  http:
+    transport: http
+    host: 127.0.0.1
+    port: 8000
+
+evaluation:
+  judge_model: gpt-4o
+  base_url: ${BASE_URL}
+  api_key: ${API_KEY}
