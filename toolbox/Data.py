@@ -1606,3 +1606,28 @@ def fit_netcdf_timeseries(
         for yr, y_fit in zip(years, y_fitted):
             w.writerow([yr, float(y_fit) if np.isfinite(y_fit) else ""]) 
     return {"output_path": out_path}
+
+# @mcp.tool()
+def export_vector_to_geojson(input_vector_path: str, output_name: str) -> Dict[str, Any]:
+    """
+    Convert a vector layer to GeoJSON.
+
+    Args:
+        input_vector_path: Path to the source vector file.
+        output_name: Output GeoJSON filename.
+
+    Returns:
+        status: str, "success" if the file is written.
+        output_path: str, absolute path to the generated GeoJSON file.
+        feature_count: int, number of exported features.
+    """
+    if not os.path.isfile(input_vector_path):
+        raise FileNotFoundError(f"Vector file not found: {input_vector_path}")
+    try:
+        gdf = gpd.read_file(input_vector_path, engine="fiona")
+    except Exception:
+        gdf = gpd.read_file(input_vector_path)
+    out_path = os.path.abspath(os.path.join(OUTPUT_DIR, output_name))
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
+    gdf.to_file(out_path, driver="GeoJSON")
+    return {"status": "success", "output_path": out_path, "feature_count": int(len(gdf))}

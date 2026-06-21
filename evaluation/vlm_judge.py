@@ -387,18 +387,22 @@ def main():
     parser = argparse.ArgumentParser(description="Run VLM-as-judge evaluation.")
     parser.add_argument("--result", type=str, required=True, help="Path to the result JSONL file")
     parser.add_argument("--runs", type=int, default=1, help="Total number of evaluation runs per task to calculate mean/std")
+    parser.add_argument("--id", type=str, help="Comma-separated task IDs to evaluate and merge into the existing CSV")
     args = parser.parse_args()
+
+    target_ids = None
+    if args.id:
+        target_ids = {x.strip() for x in args.id.split(",") if x.strip()}
 
     result_path = Path(args.result)
     if not result_path.exists():
         print(f"Error: Result file not found: {result_path}")
         return
 
-    # Determine final output file path
     suffix = "_vlm_eval.csv" if args.runs == 1 else f"_vlm_eval_{args.runs}runs.csv"
     output_csv = result_path.parent / f"{result_path.stem}{suffix}"
-    
-    if output_csv.exists():
+
+    if output_csv.exists() and not target_ids:
         print(f"Evaluation already exists: {output_csv}. Skipping.")
         return
 
@@ -406,10 +410,24 @@ def main():
         print(f"Benchmark file not found: {BENCHMARK_FILE}")
         return
 
-    # Check if there's a base evaluation file to resume from
     base_eval_csv = result_path.parent / f"{result_path.stem}_vlm_eval.csv"
     existing_results = {}
-    if args.runs > 1 and base_eval_csv.exists() and not output_csv.exists():
+    existing_output_rows = []
+    if output_csv.exists():
+        print(f"Found existing evaluation: {output_csv}. Loading previous scores...")
+        try:
+            df_existing = pd.read_csv(output_csv)
+            for _, row in df_existing.iterrows():
+                tid = str(row["task_id"])
+                if tid == "OVERALL":
+                    continue
+                scores_json = row["scores"] if pd.notna(row.get("scores")) else "[]"
+                reasons_json = row["reasons"] if pd.notna(row.get("reasons")) else "[]"
+                existing_output_rows.append({"task_id": tid, "score": float(row["score"]), "score_std": float(row["score_std"]), "scores": scores_json, "reasons": reasons_json})
+                existing_results[tid] = {"scores": json.loads(scores_json), "reasons": json.loads(reasons_json)}
+        except Exception as e:
+            print(f"Error loading existing evaluation: {e}")
+    elif args.runs > 1 and base_eval_csv.exists():
         print(f"Found existing base evaluation: {base_eval_csv}. Loading previous scores...")
         try:
             df_existing = pd.read_csv(base_eval_csv)
@@ -449,20 +467,17 @@ def main():
                 continue
 
     executed_tasks = []
-    
-    # Sort task IDs numerically if possible for cleaner output
     sorted_tids = sorted(task_records.keys(), key=lambda x: int(x) if x.isdigit() else x)
-    
     for tid in sorted_tids:
         records = task_records[tid]
-        # Try to find a success record
         success_records = [r for r in records if r.get('status') == 'success']
-        if success_records:
-            # Use the last success record
-            executed_tasks.append(tid)
-        else:
-            # If no success, use the last record (failed)
-            executed_tasks.append(tid)
+        executed_tasks.append(tid)
+
+    if target_ids:
+        executed_tasks = [tid for tid in executed_tasks if tid in target_ids]
+        if not executed_tasks:
+            print(f"No matching task IDs found in result file for: {sorted(target_ids)}")
+            return
     
     results = []
 
@@ -593,35 +608,31 @@ def main():
             "reasons": json.dumps(reasons)
         })
 
-    # Calculate Overall Statistics across multiple runs
-    # We need to calculate the average score for each run (e.g., Run 1 avg, Run 2 avg, Run 3 avg)
-    # Then compute the mean and std of those 3 values.
-    
+    if existing_output_rows:
+        new_ids = {str(r["task_id"]) for r in results}
+        merged = [r for r in existing_output_rows if str(r["task_id"]) not in new_ids]
+        merged.extend(results)
+        results = merged
+
+    results = [r for r in results if str(r.get("task_id")) != "OVERALL"]
+    results = sorted(results, key=lambda x: int(str(x["task_id"])) if str(x["task_id"]).isdigit() else str(x["task_id"]))
+
     if results and args.runs > 0:
         run_averages = []
-        
-        # Iterate through each run index (0 to args.runs-1)
         for i in range(args.runs):
             run_scores = []
             for r in results:
                 try:
-                    # Parse the scores list for this task
                     task_scores = json.loads(r['scores'])
-                    # Get the score for the i-th run, default to 0 if missing (should be padded already)
-                    score = task_scores[i] if i < len(task_scores) else 0.0
-                    run_scores.append(score)
+                    run_scores.append(task_scores[i] if i < len(task_scores) else 0.0)
                 except:
                     run_scores.append(0.0)
-            
-            # Calculate average for this specific run across all tasks
             if run_scores:
-                run_avg = sum(run_scores) / len(run_scores)
-                run_averages.append(run_avg)
-                
-        # Now calculate statistics on the run averages
+                run_averages.append(sum(run_scores) / len(run_scores))
+
         overall_mean = sum(run_averages) / len(run_averages) if run_averages else 0.0
         overall_std = statistics.stdev(run_averages) if len(run_averages) > 1 else 0.0
-        
+
         print(f"\n{'='*40}")
         print(f"OVERALL SUMMARY ({len(results)} tasks, {args.runs} runs)")
         for idx, val in enumerate(run_averages):
@@ -630,17 +641,9 @@ def main():
         print(f"  Final Mean: {overall_mean:.2f}")
         print(f"  Final Std Dev: {overall_std:.2f}")
         print(f"{'='*40}\n")
-        
-        # Append summary row
-        results.append({
-            "task_id": "OVERALL",
-            "score": round(overall_mean, 2),
-            "score_std": round(overall_std, 2),
-            "scores": json.dumps(run_averages), # Save the per-run averages here
-            "reasons": json.dumps([f"Run {i+1} Avg: {v:.2f}" for i, v in enumerate(run_averages)])
-        })
 
-    # Save results to the same directory as the result file
+        results.append({"task_id": "OVERALL", "score": round(overall_mean, 2), "score_std": round(overall_std, 2), "scores": json.dumps(run_averages), "reasons": json.dumps([f"Run {i+1} Avg: {v:.2f}" for i, v in enumerate(run_averages)])})
+
     pd.DataFrame(results).to_csv(output_csv, index=False)
     print(f"Evaluation complete. Results saved to {output_csv}")
 

@@ -349,7 +349,12 @@ def create_multilayer_map(
 
         if ltype == "vector":
             gdf = gpd.read_file(data_path)
-            
+            if gdf.crs is not None and getattr(gdf.crs, "is_geographic", False):
+                minx, miny, maxx, maxy = gdf.total_bounds
+                if minx < -180 or maxx > 180 or miny < -90 or maxy > 90:
+                    gdf = gdf.copy()
+                    gdf.crs = None
+
             column = style.get("column")
             if column:
                  try:

@@ -100,10 +100,10 @@ uv run runners/run_benchmark.py --model qwen3-32b --agent react
 ```
 
 **Resume from Checkpoint**:
-If a test is interrupted, use the `--resume` parameter with the previous Run ID to continue (model and agent must also be specified):
+If a test is interrupted, use the `--resume` parameter with the previous result file path to continue (model and agent must also be specified):
 
 ```bash
-uv run runners/run_benchmark.py --model gpt-4o --agent react --resume all_tools_20250101_120000
+uv run runners/run_benchmark.py --model gpt-4o --agent react --resume results/gpt-4o/react/all_tools_20250101_120000.jsonl
 ```
 
 ### 2. Run Single or Multiple Tasks (Debug Mode)
@@ -320,10 +320,10 @@ uv run runners/run_benchmark.py --model qwen3-32b --agent react
 ```
 
 **断点续测**:
-如果测试意外中断，可以使用 `--resume` 参数指定上一次运行的 Run ID 继续运行（需同时指定模型和 Agent）：
+如果测试意外中断，可以使用 `--resume` 参数指定上一次运行的结果文件路径继续运行（需同时指定模型和 Agent）：
 
 ```bash
-uv run runners/run_benchmark.py --model gpt-4o --agent react --resume all_tools_20250101_120000
+uv run runners/run_benchmark.py --model gpt-4o --agent react --resume results/gpt-4o/react/all_tools_20250101_120000.jsonl
 ```
 
 ### 2. 运行单个或多个任务 (调试模式)
