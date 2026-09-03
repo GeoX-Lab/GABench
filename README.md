@@ -231,6 +231,12 @@ uv run evaluation/analyze_llm_usage.py --model Qwen3-32B-AWQ
 uv run evaluation/analyze_llm_usage.py --result results/qwen3-32b/react/all_tools_20250101_120000.jsonl
 ```
 
+## License
+
+GABench is released under the Apache License 2.0. You are free to use, modify, redistribute, and build upon GABench for both academic and commercial purposes.
+
+Parts of GABench are based on GeoAnalystBench, which is licensed under the Apache License 2.0.
+
 ---
 
 # 中文版本
