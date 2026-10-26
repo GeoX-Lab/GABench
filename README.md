@@ -4,6 +4,28 @@ GeoAgentBench is a benchmark framework for evaluating the capabilities of Large 
 
 GeoAgentBench 是一个用于评估大语言模型（LLM）在地理空间任务中能力的基准测试框架。它包含了一系列地理分析任务，支持多种 Agent 架构（如 ReAct, Plan & Solve）和多种模型。
 
+
+## 📄 Paper & Citation
+
+**GeoAgentBench: A Dynamic Execution Benchmark for Tool-Augmented Agents in Spatial Analysis**
+
+**Published in:** *Geo-spatial Information Science* (2026)
+
+**Paper:** [Published Version](https://doi.org/10.1080/10095020.2026.2736957)
+
+If you find GABench useful in your research, please cite our paper:
+
+```bibtex
+@article{yu2026geoagentbench,
+  title={GeoAgentBench: A Dynamic Execution Benchmark for Tool-Augmented Agents in Spatial Analysis},
+  author={Yu, Bo and Yang, Cheng and Hou, Dongyang and Liu, Chengfu and Liu, Jiayao and Wang, Chi and Zhang, Zhiming and Li, Haifeng and Yang, Wentao},
+  journal={Geo-spatial Information Science},
+  year={2026},
+  doi={10.1080/10095020.2026.2736957},
+  url={https://doi.org/10.1080/10095020.2026.2736957}
+}
+```
+
 ---
 
 ## Table of Contents / 目录
